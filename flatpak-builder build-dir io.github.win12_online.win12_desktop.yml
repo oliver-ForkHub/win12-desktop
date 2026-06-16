@@ -1,0 +1,35 @@
+app-id: io.github.win12_online.win12_desktop
+
+runtime: org.freedesktop.Platform
+runtime-version: "24.08"
+sdk: org.freedesktop.Sdk
+
+command: win12-desktop
+
+finish-args:
+  # 网络
+  - --share=network
+
+  # 显示
+  - --socket=x11
+  - --socket=wayland
+
+  # GPU
+  - --device=dri
+
+  # 音频
+  - --socket=pulseaudio
+
+  # 用户目录
+  - --filesystem=home
+
+modules:
+  - name: win12-desktop
+    buildsystem: simple
+
+    build-commands:
+      - install -Dm755 tauri/src-tauri/target/release/win12-desktop /app/bin/win12-desktop
+
+    sources:
+      - type: dir
+        path: .
