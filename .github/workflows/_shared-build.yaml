@@ -8,13 +8,13 @@ on:
         required: true
       args:
         type: string
-        default: ""
+        default: ''
       rust-targets:
         type: string
-        default: ""
+        default: ''
       name:
         type: string
-        default: ""
+        default: ''
 
 jobs:
   build-app:

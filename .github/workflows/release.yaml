@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag，例如 v0.1.0"
+        description: 'Release tag，例如 v0.1.0'
         type: string
         required: true
       confirm_release:
-        description: "我确认已完成本次版本发行所需的全部准备工作（包括但不限于版本号更新、CHANGELOG 更新、文档同步、代码审查及必要测试）。"
+        description: '我确认已完成本次版本发行所需的全部准备工作（包括但不限于版本号更新、CHANGELOG 更新、文档同步、代码审查及必要测试）。'
         type: boolean
         default: false
         required: true
@@ -43,13 +43,13 @@ jobs:
             name: macOS (Intel)
             rust-targets: x86_64-apple-darwin
           - platform: ubuntu-22.04
-            args: "--bundles appimage,deb,rpm"
+            args: '--bundles appimage,deb,rpm'
             name: Linux (x86_64)
-            rust-targets: ""
+            rust-targets: ''
           - platform: windows-latest
-            args: ""
+            args: ''
             name: Windows (x86_64)
-            rust-targets: ""
+            rust-targets: ''
 
     uses: ./.github/workflows/_shared-build.yaml
     with:
@@ -114,6 +114,7 @@ jobs:
             release/**/*
       - name: Trigger NJU mirror sync
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
           echo "${{ secrets.NJU_MIRROR_SSH_KEY }}" > ~/.ssh/nju_key
           chmod 600 ~/.ssh/nju_key
