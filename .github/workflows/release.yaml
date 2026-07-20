@@ -88,7 +88,9 @@ jobs:
             echo "其他下载地址："
             echo
             echo "[![AUR win12-desktop-bin](https://img.shields.io/badge/AUR-win12--desktop--bin-49bdff?style=flat-square)](https://aur.archlinux.org/packages/win12-desktop-bin)  "
-            echo "[![Mirror nju.mirror.edu.cn](https://img.shields.io/badge/Mirror-nju.mirror.edu.cn-61dafb?style=flat-square)](https://mirror.nju.edu.cn/github-release/win12-online/win12-desktop/)"
+            echo "[![Mirror mirror.nju.edu.cn](https://img.shields.io/badge/Mirror-mirror.nju.edu.cn-61dafb?style=flat-square)](https://mirror.nju.edu.cn/github-release/win12-online/win12-desktop/)"
+            echo
+            echo "[不知道该下载哪个文件?](https://win12-wiki.lingbopro.qzz.io/zh/desktop/installation)"
             echo
             echo "## 文件校验"
             echo
