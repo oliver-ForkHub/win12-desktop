@@ -65,7 +65,7 @@ jobs:
 
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: tauri-bundles-*
           path: ./release
@@ -76,6 +76,7 @@ jobs:
       - name: Generate release notes
         shell: bash
         run: |
+          set -euo pipefail
           if ! find release -type f -print -quit | grep -q .; then
             echo "No release files found; refusing to publish an empty checksum table." >&2
             exit 1
@@ -101,7 +102,7 @@ jobs:
                 done
           } > release-notes.md
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           token: ${{ secrets.BEDEVERE_WIN12_BOT_TOKEN }}
           tag_name: ${{ inputs.tag }}
