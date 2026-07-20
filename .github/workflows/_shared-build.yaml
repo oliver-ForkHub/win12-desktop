@@ -27,11 +27,14 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
+      - name: Setup pnpm
+        uses: pnpm/setup@v1
         with:
-          node-version: 20
-          cache: npm
+          version: 11
+          # pnpm can automatically install node, so there is no need to call actions/setup-node
+          runtime: node@22
+          cache: true
+          install: false
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -49,7 +52,7 @@ jobs:
             patchelf
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: pnpm ci
 
       - name: Build Tauri application
         uses: tauri-apps/tauri-action@v0
