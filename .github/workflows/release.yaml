@@ -68,11 +68,21 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           pattern: tauri-bundles-*
-          path: ./release
+          path: ./artifact
           merge-multiple: true
       - name: Debug - list files
         run: |
           tree .
+      - name: Move artifacts
+        run: |
+          mkdir release
+          mv artifact/**/* release
+          tree ./release
+      - name: Generate checksums
+        shell: bash
+        run: |
+          cd release
+          sha256sum * > sha256sums.txt
       - name: Generate release notes
         shell: bash
         run: |
@@ -96,13 +106,7 @@ jobs:
             echo
             echo "| File | Checksum (SHA256) |"
             echo "| --- | --- |"
-            find release -type f -print0 \
-              | sort -z \
-              | while IFS= read -r -d '' file; do
-                  checksum="$(sha256sum "$file" | awk '{ print toupper($1) }')"
-                  filename="$(basename "$file")"
-                  echo "| \`$filename\` | \`$checksum\` |"
-                done
+            cat sha256sums.txt | awk '{printf "| `%s` | `%s` |\n", substr($0, 67), $1}'
           } > release-notes.md
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
@@ -114,7 +118,7 @@ jobs:
           draft: true
           prerelease: false
           files: |
-            release/**/*
+            release/*
       - name: Trigger NJU mirror sync
         run: |
           set -euo pipefail
