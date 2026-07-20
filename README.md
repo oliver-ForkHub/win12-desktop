@@ -2,6 +2,14 @@
 
 win12 桌面端，基于 Tauri 封装，将 Windows 12 网页版变成独立桌面应用。
 
+[查看 Win12 Wiki 页面↗](https://win12-wiki.lingbopro.qzz.io/zh/desktop/)
+
+## 下载地址
+
+[![GitHub Release](https://img.shields.io/github/v/release/win12-online/win12-desktop?label=GitHub%20Release&style=flat-square)](https://github.com/win12-online/win12-desktop/releases/latest)
+[![AUR win12-desktop-bin](https://img.shields.io/badge/AUR-win12--desktop--bin-49bdff?style=flat-square)](https://aur.archlinux.org/packages/win12-desktop-bin)
+[![Mirror nju.mirror.edu.cn](https://img.shields.io/badge/Mirror-nju.mirror.edu.cn-61dafb?style=flat-square)](https://mirror.nju.edu.cn/github-release/win12-online/win12-desktop/)
+
 ## 关于调试
 
 ### 安装依赖
