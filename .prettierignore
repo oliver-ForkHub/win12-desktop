@@ -1,0 +1,5 @@
+tauri/src/
+node_modules/
+pnpm-lock.yaml
+dist/
+.vscode/

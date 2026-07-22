@@ -8,13 +8,13 @@ on:
         required: true
       args:
         type: string
-        default: ""
+        default: ''
       rust-targets:
         type: string
-        default: ""
+        default: ''
       name:
         type: string
-        default: ""
+        default: ''
 
 jobs:
   build-app:
@@ -23,15 +23,18 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           submodules: recursive
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup pnpm
+        uses: pnpm/setup@v1
         with:
-          node-version: 20
-          cache: npm
+          version: 11
+          # pnpm can automatically install node, so there is no need to call actions/setup-node
+          runtime: node@22
+          cache: true
+          install: false
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -49,7 +52,7 @@ jobs:
             patchelf
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: pnpm ci
 
       - name: Build Tauri application
         uses: tauri-apps/tauri-action@v0
@@ -63,7 +66,7 @@ jobs:
           ls -R tauri/src-tauri/target/*/release/bundle/ || true
           ls -R tauri/src-tauri/target/release/bundle/ || true
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tauri-bundles-${{ inputs.name }}
           path: |
