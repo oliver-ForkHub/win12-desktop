@@ -4,8 +4,10 @@ use argon2::{
 };
 use network_interface::{NetworkInterface, NetworkInterfaceConfig};
 use rand_core::OsRng;
-use serde::Serialize;
+use semver::Version;
+use serde::{Deserialize, Serialize};
 use std::{
+    cmp::Ordering,
     fs,
     io::BufRead,
     path::PathBuf,
@@ -36,6 +38,26 @@ struct PasswordStatus {
 #[derive(Serialize)]
 struct LoginResult {
     ok: bool,
+}
+
+#[derive(Serialize)]
+struct UpdateCheckResult {
+    current_version: String,
+    latest_version: String,
+    latest_name: Option<String>,
+    release_url: String,
+    release_body: Option<String>,
+    published_at: Option<String>,
+    update_available: bool,
+}
+
+#[derive(Deserialize)]
+struct GitHubRelease {
+    tag_name: String,
+    name: Option<String>,
+    html_url: String,
+    body: Option<String>,
+    published_at: Option<String>,
 }
 
 #[derive(Clone, Serialize)]
@@ -115,6 +137,51 @@ fn set_login_password(
     fs::write(&path, password_hash).map_err(|e| e.to_string())?;
 
     Ok(())
+}
+
+#[tauri::command]
+async fn check_app_update() -> Result<UpdateCheckResult, String> {
+    let current_version = env!("CARGO_PKG_VERSION").to_string();
+    let release = reqwest::Client::new()
+        .get("https://api.github.com/repos/win12-online/win12-desktop/releases/latest")
+        .header("Accept", "application/vnd.github+json")
+        .header("User-Agent", "win12-desktop-tauri-update-check")
+        .send()
+        .await
+        .map_err(|e| format!("无法连接 GitHub: {e}"))?
+        .error_for_status()
+        .map_err(|e| format!("GitHub 返回错误: {e}"))?
+        .json::<GitHubRelease>()
+        .await
+        .map_err(|e| format!("无法解析 GitHub 发布信息: {e}"))?;
+
+    let update_available = compare_versions(&release.tag_name, &current_version)
+        .map(|ordering| ordering == Ordering::Greater)
+        .unwrap_or_else(|| normalize_version_tag(&release.tag_name) != current_version);
+
+    Ok(UpdateCheckResult {
+        current_version,
+        latest_version: release.tag_name,
+        latest_name: release.name,
+        release_url: release.html_url,
+        release_body: release.body.map(|body| body.chars().take(1200).collect()),
+        published_at: release.published_at,
+        update_available,
+    })
+}
+
+fn compare_versions(remote: &str, current: &str) -> Option<Ordering> {
+    let remote = Version::parse(&normalize_version_tag(remote)).ok()?;
+    let current = Version::parse(&normalize_version_tag(current)).ok()?;
+    Some(remote.cmp(&current))
+}
+
+fn normalize_version_tag(version: &str) -> String {
+    version
+        .trim()
+        .trim_start_matches('v')
+        .trim_start_matches('V')
+        .to_string()
 }
 
 #[tauri::command]
@@ -317,6 +384,7 @@ pub fn run() {
             get_login_password_status,
             verify_login_password,
             set_login_password,
+            check_app_update,
             ping_host
         ])
         .run(tauri::generate_context!())
