@@ -75,22 +75,14 @@ jobs:
           tree .
       - name: Move artifacts
         run: |
-          set -euo pipefail
-          mkdir -p release
-          # 使用 rsync 将 artifact/ 下的内容合并到 release/
-          # --remove-source-files 会在复制后删除已复制的普通文件（保留目录）
-          rsync -a --remove-source-files artifact/ release/
-          # 删除 artifact 中可能残留的空目录
-          find artifact -type d -empty -delete || true
+          mkdir release
+          mv artifact/**/* release
           tree ./release
       - name: Generate checksums
         shell: bash
         run: |
-          set -euo pipefail
           cd release
-          # 对所有文件递归生成 sha256，按路径排序以保证稳定输出
-          # 输出格式: <hash>  ./path/to/file
-          find . -type f -print0 | sort -z | xargs -0 sha256sum > sha256sums.txt
+          sha256sum * > sha256sums.txt
       - name: Generate release notes
         shell: bash
         run: |
@@ -106,7 +98,7 @@ jobs:
             echo "其他下载地址："
             echo
             echo "[![AUR win12-desktop-bin](https://img.shields.io/badge/AUR-win12--desktop--bin-49bdff?style=flat-square)](https://aur.archlinux.org/packages/win12-desktop-bin)  "
-            echo "[![Mirror mirror.nju.edu.cn](https://img.shields.io/badge/Mirror-mirror.nju.edu.cn-61dafb?style=flat-square)](https://mirror.nju.edu.cn/github-release/win12-online/win12-desktop[...])"
+            echo "[![Mirror mirror.nju.edu.cn](https://img.shields.io/badge/Mirror-mirror.nju.edu.cn-61dafb?style=flat-square)](https://mirror.nju.edu.cn/github-release/win12-online/win12-desktop/)"
             echo
             echo "[不知道该下载哪个文件?](https://win12-wiki.lingbopro.qzz.io/zh/desktop/installation)"
             echo
@@ -114,15 +106,7 @@ jobs:
             echo
             echo "| File | Checksum (SHA256) |"
             echo "| --- | --- |"
-            # 解析 sha256sums.txt 中的每一行，格式为 "<hash>  ./path"
-            while IFS= read -r line; do
-              # 取第一个空格前的 hash，取两个空格后的 filename（sha256sum 默认使用两个空格分隔）
-              sum="${line%% *}"
-              file="${line#*  }"
-              # 去掉开头的 ./ 前缀
-              file="${file#./}"
-              printf "| `%s` | `%s` |\n" "$file" "$sum"
-            done < sha256sums.txt
+            cat sha256sums.txt | awk '{printf "| `%s` | `%s` |\n", substr($0, 67), $1}'
           } > release-notes.md
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
