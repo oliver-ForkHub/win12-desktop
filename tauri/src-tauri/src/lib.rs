@@ -13,8 +13,15 @@ use std::{
     path::PathBuf,
     process::{Command, Stdio},
     thread,
+    time::Duration,
 };
 use tauri::Emitter;
+
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
 
 #[derive(Serialize)]
 struct BatteryInfo {
@@ -261,6 +268,28 @@ fn get_network_info() -> Result<NetworkInfo, String> {
     })
 }
 
+/// Validate that `host` is a safe, single hostname or IP address.
+/// Returns `true` if the host is safe to pass to `ping`.
+fn is_valid_host(host: &str) -> bool {
+    if host.is_empty() || host.len() > 255 {
+        return false;
+    }
+    // Reject shell metacharacters, flags, and whitespace
+    if host.starts_with('-') || host.starts_with('/')
+        || host.chars().any(|c| matches!(c, 
+            '|' | '&' | ';' | '`' | '$' | '(' | ')' | '{' | '}' | '<' | '>'
+            | '\\' | '\"' | '!' | '~' | '#' | '@' | '%' | '^' | '*' | '=' | '+' | '?'
+        ))
+        || !host.chars().all(|c| {
+            c.is_alphanumeric() || c == '.' || c == '-'
+                || c == ':' || c == '_' || c == '%'
+        })
+    {
+        return false;
+    }
+    true
+}
+
 #[tauri::command]
 fn ping_host(
     window: tauri::Window,
@@ -268,18 +297,16 @@ fn ping_host(
     ipv6: Option<bool>,
     request_id: String,
 ) -> Result<(), String> {
-    let host = host.trim();
+    let host = host.trim().to_string();
     let ipv6 = ipv6.unwrap_or(false);
 
-    if host.is_empty() {
-        return Err("Usage: ping <host>".to_string());
+    if !is_valid_host(&host) {
+        return Err(format!(
+            "'{}' 不是有效的主机名或 IP 地址",
+            host
+        ));
     }
 
-    if host.split_whitespace().count() != 1 || host.starts_with('-') || host.starts_with('/') {
-        return Err("Only a single host or IP address is supported".to_string());
-    }
-
-    let host = host.to_string();
     thread::spawn(move || {
         let mut command = if ipv6 && !cfg!(target_os = "windows") {
             Command::new("ping6")
@@ -289,6 +316,7 @@ fn ping_host(
 
         #[cfg(target_os = "windows")]
         {
+            command.creation_flags(CREATE_NO_WINDOW);
             if ipv6 {
                 command.args(["-6", "-n", "4", &host]);
             } else {
@@ -321,8 +349,31 @@ fn ping_host(
             thread::spawn(move || stream_ping_output(stderr, window, request_id))
         });
 
-        let success = child.wait().map(|status| status.success()).unwrap_or(false);
+        let timeout = Duration::from_secs(30);
+        let deadline = std::time::Instant::now() + timeout;
 
+        // Poll child completion with timeout so we can kill stuck processes
+        let success = loop {
+            match child.try_wait() {
+                Ok(Some(status)) => {
+                    // Clean exit after 4 pings
+                    break Ok(status.success());
+                }
+                Ok(None) => {
+                    if std::time::Instant::now() >= deadline {
+                        let _ = child.kill();
+                        let _ = child.wait(); // reap
+                        break Err("ping 超时".to_string());
+                    }
+                    thread::sleep(Duration::from_millis(100));
+                }
+                Err(e) => {
+                    break Err(format!("ping 进程出错: {e}"));
+                }
+            }
+        };
+
+        // Drain reader threads (pipes break automatically on kill/exit)
         if let Some(handle) = stdout_handle {
             let _ = handle.join();
         }
@@ -330,7 +381,11 @@ fn ping_host(
             let _ = handle.join();
         }
 
-        emit_ping_output(&window, &request_id, "", true, success);
+        match success {
+            Ok(true) => emit_ping_output(&window, &request_id, "", true, true),
+            Ok(false) => emit_ping_output(&window, &request_id, "", true, false),
+            Err(msg) => emit_ping_output(&window, &request_id, format!("{msg}\n"), true, false),
+        }
     });
 
     Ok(())
