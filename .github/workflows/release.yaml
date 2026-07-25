@@ -106,7 +106,7 @@ jobs:
             echo
             echo "| File | Checksum (SHA256) |"
             echo "| --- | --- |"
-            cat sha256sums.txt | awk '{printf "| `%s` | `%s` |\n", substr($0, 67), $1}'
+            cat ./release/sha256sums.txt | awk '{printf "| `%s` | `%s` |\n", substr($0, 67), $1}'
           } > release-notes.md
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
