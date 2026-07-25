@@ -76,7 +76,7 @@ jobs:
       - name: Move artifacts
         run: |
           mkdir release
-          mv artifact/**/* release
+          find ./artifact -type f -print0 | xargs -0 -i mv -v {} release/
           tree ./release
       - name: Generate checksums
         shell: bash
