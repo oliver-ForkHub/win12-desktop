@@ -80,6 +80,11 @@ fn password_hash_path() -> Result<PathBuf, String> {
     Ok(data_dir.join("win12-desktop").join("password.hash"))
 }
 
+fn settings_path() -> Result<PathBuf, String> {
+    let data_dir = dirs::data_dir().ok_or("Cannot find user data directory")?;
+    Ok(data_dir.join("win12-desktop").join("settings.json"))
+}
+
 #[tauri::command]
 fn get_login_password_status() -> Result<PasswordStatus, String> {
     Ok(PasswordStatus {
@@ -411,6 +416,25 @@ fn stream_ping_output<R: std::io::Read>(stream: R, window: tauri::Window, reques
     }
 }
 
+#[tauri::command]
+fn read_settings() -> Result<String, String> {
+    let path = settings_path()?;
+    if !path.exists() {
+        return Ok("{}".to_string());
+    }
+    fs::read_to_string(&path).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn write_settings(json: String) -> Result<(), String> {
+    let path = settings_path()?;
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    fs::write(&path, &json).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 fn emit_ping_output(
     window: &tauri::Window,
     request_id: &str,
@@ -436,6 +460,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_battery_info,
             get_network_info,
+            read_settings,
+            write_settings,
             get_login_password_status,
             verify_login_password,
             set_login_password,
