@@ -435,6 +435,51 @@ fn write_settings(json: String) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn open_external_url(url: String) -> Result<bool, String> {
+    let url = url.trim();
+    if !(url.starts_with("https://") || url.starts_with("http://"))
+        || url.chars().any(|c| c.is_control() || c.is_whitespace())
+    {
+        return Err("Only HTTP(S) URLs can be opened".to_string());
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let mut candidates = Vec::new();
+        if let Some(program_files) = std::env::var_os("ProgramFiles") {
+            candidates.push(PathBuf::from(program_files).join("Microsoft/Edge/Application/msedge.exe"));
+        }
+        if let Some(program_files_x86) = std::env::var_os("ProgramFiles(x86)") {
+            candidates.push(PathBuf::from(program_files_x86).join("Microsoft/Edge/Application/msedge.exe"));
+        }
+        if let Some(local_app_data) = std::env::var_os("LOCALAPPDATA") {
+            candidates.push(PathBuf::from(local_app_data).join("Microsoft/Edge/Application/msedge.exe"));
+        }
+
+        let edge = candidates
+            .into_iter()
+            .find(|path| path.is_file())
+            .ok_or("Microsoft Edge was not found".to_string())?;
+        let data_dir = dirs::data_dir().ok_or("Cannot find application data directory")?;
+        let profile_dir = data_dir.join("win12-desktop").join("browser-profile");
+        fs::create_dir_all(&profile_dir).map_err(|e| e.to_string())?;
+
+        Command::new(edge)
+            .arg(format!("--user-data-dir={}", profile_dir.display()))
+            .arg(format!("--app={url}"))
+            .spawn()
+            .map_err(|e| format!("Failed to start Microsoft Edge: {e}"))?;
+        return Ok(true);
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = url;
+        Err("System Microsoft Edge is only supported on Windows".to_string())
+    }
+}
+
 fn emit_ping_output(
     window: &tauri::Window,
     request_id: &str,
@@ -466,7 +511,8 @@ pub fn run() {
             verify_login_password,
             set_login_password,
             check_app_update,
-            ping_host
+            ping_host,
+            open_external_url
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
