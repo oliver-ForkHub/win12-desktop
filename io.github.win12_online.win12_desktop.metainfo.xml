@@ -3,14 +3,19 @@
   <id>io.github.win12_online.win12_desktop</id>
 
   <name>Win12 Desktop</name>
-  <summary>Win12 desktop environment</summary>
+  <summary>Windows 12-like desktop environment for Linux</summary>
 
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>EPL-2.0</project_license>
 
+  <developer id="io.github.win12_online">
+    <name>win12-online</name>
+  </developer>
+
   <description>
     <p>
-      Win12 Desktop is a desktop application based on the Win12 project.
+      Win12 Desktop is a Linux desktop application inspired by the Win12 web project.
+      It provides a desktop-style user interface with windows, applications, and system tools.
     </p>
   </description>
 
