@@ -28,7 +28,14 @@ modules:
     buildsystem: simple
 
     build-commands:
-      - install -Dm755 tauri/src-tauri/target/release/win12-desktop /app/bin/win12-desktop
+      - install -Dm755 tauri/src-tauri/target/release/win12-desktop
+          /app/bin/win12-desktop
+
+      - install -Dm644 io.github.win12_online.win12_desktop.desktop
+          /app/share/applications/io.github.win12_online.win12_desktop.desktop
+
+      - install -Dm644 io.github.win12_online.win12_desktop.metainfo.xml
+          /app/share/metainfo/io.github.win12_online.win12_desktop.metainfo.xml
 
     sources:
       - type: dir
