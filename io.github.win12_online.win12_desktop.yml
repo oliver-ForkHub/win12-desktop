@@ -1,8 +1,8 @@
 app-id: io.github.win12_online.win12_desktop
 
-runtime: org.freedesktop.Platform
-runtime-version: "24.08"
-sdk: org.freedesktop.Sdk
+runtime: org.gnome.Platform
+runtime-version: "48"
+sdk: org.gnome.Sdk
 
 command: win12-desktop
 
