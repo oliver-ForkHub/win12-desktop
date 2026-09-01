@@ -20,8 +20,6 @@ finish-args:
   # 音频
   - --socket=pulseaudio
 
-  # 用户目录
-  - --filesystem=home
 
 modules:
   - name: win12-desktop
