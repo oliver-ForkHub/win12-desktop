@@ -37,6 +37,12 @@ modules:
       - install -Dm644 io.github.win12_online.win12_desktop.metainfo.xml
           /app/share/metainfo/io.github.win12_online.win12_desktop.metainfo.xml
 
+      - install -Dm644 tauri/src-tauri/icons/128x128.png
+          /app/share/icons/hicolor/128x128/apps/io.github.win12_online.win12_desktop.png
+
+      - install -Dm644 tauri/src-tauri/icons/128x128@2x.png
+          /app/share/icons/hicolor/256x256/apps/io.github.win12_online.win12_desktop.png
+
     sources:
       - type: dir
         path: .
