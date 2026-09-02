@@ -13,6 +13,7 @@ finish-args:
   # 显示
   - --socket=wayland
   - --socket=fallback-x11
+  - --share=ipc
 
   # GPU
   - --device=dri

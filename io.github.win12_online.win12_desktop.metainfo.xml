@@ -34,6 +34,14 @@
     </screenshot>
   </screenshots>
 
+  <releases>
+    <release version="0.2.6" date="2026-08-15">
+      <description>
+        <p>Win12 0.2.6 release.</p>
+      </description>
+    </release>
+  </releases>
+
   <launchable type="desktop-id">
     io.github.win12_online.win12_desktop.desktop
   </launchable>
