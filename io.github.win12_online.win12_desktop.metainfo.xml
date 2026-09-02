@@ -19,6 +19,17 @@
     </p>
   </description>
 
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/win12-online/win12-desktop/refs/heads/main/images/linux-1.png</image>
+      <caption>Win12 Desktop with the desktop and application menu open</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://raw.githubusercontent.com/win12-online/win12-desktop/refs/heads/main/images/linux-2.png</image>
+      <caption>Win12 Desktop running windowed applications</caption>
+    </screenshot>
+  </screenshots>
+
   <launchable type="desktop-id">
     io.github.win12_online.win12_desktop.desktop
   </launchable>
