@@ -20,6 +20,13 @@ finish-args:
   # 音频
   - --socket=pulseaudio
 
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.rust-stable
+
+build-options:
+  append-path: /usr/lib/sdk/rust-stable/bin
+  env:
+    CARGO_HOME: /run/build/win12-desktop/cargo
 
 modules:
   - name: iputils
@@ -46,6 +53,7 @@ modules:
     buildsystem: simple
 
     build-commands:
+      - cd tauri/src-tauri && cargo build --release --locked --offline
       - install -Dm755 tauri/src-tauri/target/release/win12-desktop
           /app/bin/win12-desktop
 
