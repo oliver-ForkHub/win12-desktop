@@ -11,8 +11,8 @@ finish-args:
   - --share=network
 
   # 显示
-  - --socket=x11
   - --socket=wayland
+  - --socket=fallback-x11
 
   # GPU
   - --device=dri

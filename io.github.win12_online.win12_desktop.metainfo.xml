@@ -19,6 +19,10 @@
     </p>
   </description>
 
+  <url type="homepage">https://github.com/win12-online/win12-desktop</url>
+  <url type="bugtracker">https://github.com/win12-online/win12-desktop/issues</url>
+  <url type="vcs-browser">https://github.com/win12-online/win12-desktop</url>
+
   <screenshots>
     <screenshot type="default">
       <image>https://raw.githubusercontent.com/win12-online/win12-desktop/refs/heads/main/images/linux-1.png</image>
@@ -33,16 +37,6 @@
   <launchable type="desktop-id">
     io.github.win12_online.win12_desktop.desktop
   </launchable>
-
-  <url type="homepage">
-    https://github.com/win12-online/win12-desktop
-  </url>
-  <url type="bugtracker">
-    https://github.com/win12-online/win12-desktop/issues
-  </url>
-  <url type="vcs-browser">
-    https://github.com/win12-online/win12-desktop
-  </url>
 
   <content_rating type="oars-1.1"/>
 </component>
