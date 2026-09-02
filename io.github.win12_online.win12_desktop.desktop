@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Win12 Desktop
+Comment=Windows 12-like desktop environment for Linux
+Exec=win12-desktop
+Icon=io.github.win12_online.win12_desktop
+Terminal=false
+Type=Application
+Categories=Utility;
+StartupWMClass=win12-desktop;

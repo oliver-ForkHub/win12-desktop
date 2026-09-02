@@ -87,8 +87,14 @@ fn settings_path() -> Result<PathBuf, String> {
 
 #[tauri::command]
 fn get_login_password_status() -> Result<PasswordStatus, String> {
+    let path = password_hash_path()
+        .map_err(|e| format!("password path error: {}", e))?;
+
+    #[cfg(debug_assertions)]
+    println!("password path = {:?}", path);
+
     Ok(PasswordStatus {
-        has_password: password_hash_path()?.exists(),
+        has_password: path.exists(),
     })
 }
 
