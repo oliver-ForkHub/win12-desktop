@@ -6,6 +6,11 @@ on:
       - 'tauri/**'
       - '**.js'
       - '**.json'
+      - 'io.github.win12_online.win12_desktop.yml'
+      - 'io.github.win12_online.win12_desktop.desktop'
+      - 'io.github.win12_online.win12_desktop.metainfo.xml'
+      - 'cargo-sources.json'
+      - 'images/**'
       - '.gitmodules'
       - '.github/workflows/**'
   pull_request:
@@ -44,3 +49,52 @@ jobs:
       args: ${{ matrix.args }}
       rust-targets: ${{ matrix.rust-targets }}
       name: ${{ matrix.name }}
+
+  build-flatpak:
+    name: Build Flatpak
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Install Flatpak dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+      - name: Build Flatpak
+        run: |
+          flatpak-builder \
+            --user \
+            --install \
+            --install-deps-from=flathub \
+            --force-clean \
+            --repo=flatpak-repo \
+            flatpak-build \
+            io.github.win12_online.win12_desktop.yml
+
+      - name: Test Flatpak installation
+        run: |
+          flatpak info io.github.win12_online.win12_desktop
+          flatpak run --command=sh io.github.win12_online.win12_desktop -c \
+            'test -x /app/bin/win12-desktop && test -x /app/bin/ping && test -x /app/bin/ping6'
+
+      - name: Create Flatpak bundle
+        run: |
+          flatpak build-bundle \
+            flatpak-repo \
+            win12-desktop.flatpak \
+            io.github.win12_online.win12_desktop \
+            --runtime-repo=https://flathub.org/repo/flathub.flatpakrepo
+
+      - name: Upload Flatpak artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: flatpak-bundles
+          path: win12-desktop.flatpak
+          if-no-files-found: error
+          retention-days: 5
