@@ -1,7 +1,7 @@
 app-id: io.github.win12_online.win12_desktop
 
 runtime: org.gnome.Platform
-runtime-version: "48"
+runtime-version: "50"
 sdk: org.gnome.Sdk
 
 command: win12-desktop
