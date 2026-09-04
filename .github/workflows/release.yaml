@@ -73,6 +73,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y flatpak flatpak-builder appstream-compose
+          sudo ln -sf /usr/libexec/appstreamcli-compose /usr/bin/appstream-compose
+          command -v appstream-compose
           flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
       - name: Build Flatpak
