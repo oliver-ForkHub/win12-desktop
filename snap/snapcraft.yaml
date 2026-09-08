@@ -18,15 +18,20 @@ grade: devel
 platforms:
   amd64:
 
-
 parts:
   win12-desktop:
-    plugin: nil
+    plugin: rust
     source: .
+
+    rust-path:
+      - tauri/src-tauri
+
+    rust-channel: stable
+    rust-cargo-parameters:
+      - --locked
+
     build-packages:
       - build-essential
-      - cargo
-      - rustc
       - pkg-config
       - libwebkit2gtk-4.1-dev
       - libgtk-3-dev
@@ -34,6 +39,7 @@ parts:
       - librsvg2-dev
       - libxdo-dev
       - patchelf
+
     stage-packages:
       - iputils-ping
       - libwebkit2gtk-4.1-0
@@ -41,13 +47,9 @@ parts:
       - libayatana-appindicator3-1
       - librsvg2-2
       - libxdo3
+
     override-build: |
       craftctl default
-
-      cargo build \
-        --release \
-        --locked \
-        --manifest-path tauri/src-tauri/Cargo.toml
 
       install -Dm755 \
         tauri/src-tauri/target/release/win12-desktop \
