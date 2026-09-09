@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'tauri/**'
+      - 'snap/**'
       - '**.js'
       - '**.json'
       - 'io.github.win12_online.win12_desktop.yml'
@@ -86,3 +87,10 @@ jobs:
           path: win12-desktop.flatpak
           if-no-files-found: error
           retention-days: 5
+
+  build-snap:
+    name: Build Snap
+    uses: ./.github/workflows/_shared-snap.yaml
+    with:
+      artifact-name: snap-bundles
+      retention-days: 5

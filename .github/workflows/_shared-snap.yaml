@@ -1,0 +1,44 @@
+name: (shared) build Snap
+
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        type: string
+        default: snap-bundles
+      retention-days:
+        type: number
+        default: 5
+
+jobs:
+  build-snap:
+    name: Build and test Snap
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Build Snap
+        id: snapcraft
+        uses: snapcore/action-build@v1
+
+      - name: Test Snap installation
+        env:
+          SNAP_FILE: ${{ steps.snapcraft.outputs.snap }}
+        run: |
+          set -euo pipefail
+          sudo snap install --dangerous "$SNAP_FILE"
+          snap info win12-desktop
+          snap run --shell win12-desktop -c \
+            'test -x "$SNAP/usr/bin/win12-desktop" && test -x "$SNAP/usr/bin/ping" && test -x "$SNAP/usr/bin/ping6"'
+
+      - name: Upload Snap artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: ${{ steps.snapcraft.outputs.snap }}
+          if-no-files-found: error
+          retention-days: ${{ inputs.retention-days }}
