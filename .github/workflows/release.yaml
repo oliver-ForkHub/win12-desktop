@@ -96,9 +96,17 @@ jobs:
           if-no-files-found: error
           retention-days: 5
 
+  build-snap:
+    name: Build Snap
+    needs: confirm-release
+    uses: ./.github/workflows/_shared-snap.yaml
+    with:
+      artifact-name: snap-bundles
+      retention-days: 5
+
   publish:
     name: Publish Release
-    needs: [build, build-flatpak]
+    needs: [build, build-flatpak, build-snap]
     runs-on: ubuntu-latest
 
     steps:
