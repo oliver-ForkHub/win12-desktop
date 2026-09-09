@@ -40,6 +40,18 @@
         <p>Win12 0.2.6 release.</p>
       </description>
     </release>
+    <release version="0.2.7" date="2026-09-05">
+      <description>
+        <p>1.更新语言包</p>
+        <p>2.新增flatpak版本</p>
+      </description>
+    </release>
+    <release version="0.2.8" date="2026-09-10">
+      <description>
+        <p>1.更新语言包</p>
+        <p>2.新增snap包</p>
+      </description>
+    </release>
   </releases>
 
   <launchable type="desktop-id">
