@@ -34,9 +34,15 @@ parts:
       export RUSTUP_HOME="$CRAFT_PART_INSTALL/opt/rustup"
       export CARGO_HOME="$CRAFT_PART_INSTALL/opt/cargo"
 
-      curl --proto '=https' --tlsv1.2 -sSf         https://sh.rustup.rs         -o rustup-init.sh
+      curl --proto '=https' --tlsv1.2 -sSf \
+        https://sh.rustup.rs \
+        -o rustup-init.sh
 
-      sh rustup-init.sh         -y         --no-modify-path         --profile minimal         --default-toolchain stable
+      sh rustup-init.sh \
+        -y \
+        --no-modify-path \
+        --profile minimal \
+        --default-toolchain stable
 
   win12-desktop:
     plugin: nil
@@ -88,17 +94,30 @@ parts:
       cargo --version
       rustc --version
 
-      cargo build         --release         --locked         --manifest-path tauri/src-tauri/Cargo.toml
+      cargo build \
+        --release \
+        --locked \
+        --manifest-path tauri/src-tauri/Cargo.toml
 
-      install -Dm755         tauri/src-tauri/target/release/win12-desktop         "$CRAFT_PART_INSTALL/usr/bin/win12-desktop"
+      install -Dm755 \
+        tauri/src-tauri/target/release/win12-desktop \
+        "$CRAFT_PART_INSTALL/usr/bin/win12-desktop"
 
-      install -Dm644         io.github.win12_online.win12_desktop.desktop         "$CRAFT_PART_INSTALL/usr/share/applications/io.github.win12_online.win12_desktop.desktop"
+      install -Dm644 \
+        io.github.win12_online.win12_desktop.desktop \
+        "$CRAFT_PART_INSTALL/usr/share/applications/io.github.win12_online.win12_desktop.desktop"
 
-      install -Dm644         io.github.win12_online.win12_desktop.metainfo.xml         "$CRAFT_PART_INSTALL/usr/share/metainfo/io.github.win12_online.win12_desktop.metainfo.xml"
+      install -Dm644 \
+        io.github.win12_online.win12_desktop.metainfo.xml \
+        "$CRAFT_PART_INSTALL/usr/share/metainfo/io.github.win12_online.win12_desktop.metainfo.xml"
 
-      install -Dm644         tauri/src-tauri/icons/128x128.png         "$CRAFT_PART_INSTALL/usr/share/icons/hicolor/128x128/apps/io.github.win12_online.win12_desktop.png"
+      install -Dm644 \
+        tauri/src-tauri/icons/128x128.png \
+        "$CRAFT_PART_INSTALL/usr/share/icons/hicolor/128x128/apps/io.github.win12_online.win12_desktop.png"
 
-      install -Dm644         tauri/src-tauri/icons/128x128@2x.png         "$CRAFT_PART_INSTALL/usr/share/icons/hicolor/256x256/apps/io.github.win12_online.win12_desktop.png"
+      install -Dm644 \
+        tauri/src-tauri/icons/128x128@2x.png \
+        "$CRAFT_PART_INSTALL/usr/share/icons/hicolor/256x256/apps/io.github.win12_online.win12_desktop.png"
 
 apps:
   win12-desktop:
