@@ -35,6 +35,10 @@ Win12 Desktop 是 [Win12 Online](https://github.com/win12-online/win12) 的桌�
 yay -S win12-desktop-bin
 ```
 
+<a href="https://snapcraft.io/win12-desktop">
+  <img src="https://snapcraft.io/en/dark/install.svg" alt="从 Snap Store 获取">
+</a>
+
 国内网络环境可使用 [南京大学开源镜像站](https://mirror.nju.edu.cn/github-release/win12-online/win12-desktop/) 下载发布文件。
 
 ## 客户端预览
