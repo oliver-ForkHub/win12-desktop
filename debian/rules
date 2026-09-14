@@ -1,0 +1,37 @@
+#!/usr/bin/make -f
+
+# Keep the Cargo registry cache inside the crate's target directory so the
+# build does not write outside the package tree.
+export CARGO_HOME = $(CURDIR)/tauri/src-tauri/target/cargo-home
+
+TAURI_DIR := tauri/src-tauri
+BINARY := win12-desktop
+APP_ID := io.github.win12_online.win12_desktop
+
+%:
+	dh $@
+
+# The Cargo project lives under tauri/src-tauri rather than the source root,
+# so the default auto-detection targets are overridden explicitly.
+override_dh_auto_configure:
+
+override_dh_auto_build:
+	cargo build --release --locked \
+		--manifest-path $(TAURI_DIR)/Cargo.toml
+
+override_dh_auto_test:
+
+override_dh_auto_install:
+	install -Dm755 $(TAURI_DIR)/target/release/$(BINARY) \
+		debian/$(BINARY)/usr/bin/$(BINARY)
+	install -Dm644 $(APP_ID).desktop \
+		debian/$(BINARY)/usr/share/applications/$(APP_ID).desktop
+	install -Dm644 $(APP_ID).metainfo.xml \
+		debian/$(BINARY)/usr/share/metainfo/$(APP_ID).metainfo.xml
+	install -Dm644 $(TAURI_DIR)/icons/128x128.png \
+		debian/$(BINARY)/usr/share/icons/hicolor/128x128/apps/$(APP_ID).png
+	install -Dm644 $(TAURI_DIR)/icons/128x128@2x.png \
+		debian/$(BINARY)/usr/share/icons/hicolor/256x256/apps/$(APP_ID).png
+
+override_dh_auto_clean:
+	cargo clean --manifest-path $(TAURI_DIR)/Cargo.toml

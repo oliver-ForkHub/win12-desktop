@@ -1,0 +1,199 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: win12-desktop
+Upstream-Contact: https://github.com/win12-online/win12-desktop/issues
+Source: https://github.com/win12-online/win12-desktop
+Comment:
+ The Win12 Online web front end is included as a Git submodule under
+ tauri/src (https://github.com/win12-online/win12) and is embedded into
+ the shipped binary at build time. The project is a non-commercial
+ open-source hobby project and is not affiliated with, sponsored by,
+ endorsed by, or connected to Microsoft Corporation.
+
+Files: *
+Copyright: 2026 win12-online contributors
+License: EPL-2.0
+
+Files: tauri/src/*
+Copyright: 2026 win12-online contributors
+License: EPL-2.0
+
+Files: io.github.win12_online.win12_desktop.metainfo.xml
+Copyright: 2026 win12-online contributors
+License: CC0-1.0
+Comment:
+ AppStream metadata, matching the CC0-1.0 metadata_license declared
+ inside the file itself.
+
+Files: tauri/src/lang/*
+Copyright: 2026 win12-locales contributors
+License: CC0-1.0
+Comment:
+ Imported, modified and translated content from the win12-locales
+ project (https://github.com/win12-online/win12-locales). The list of
+ translators is in tauri/src/lang/TRANSLATORS.
+
+Files:
+ tauri/src/bootstrap-icons.css
+ tauri/src/fonts/bootstrap-icons.woff
+ tauri/src/fonts/bootstrap-icons.woff2
+Copyright: 2019-2024 The Bootstrap Authors
+License: MIT
+Comment:
+ Bootstrap Icons, see https://icons.getbootstrap.com/.
+
+Files: tauri/src/scripts/jq.min.js
+Copyright: OpenJS Foundation and other contributors
+License: MIT
+Comment:
+ jQuery JavaScript Library v3.6.0, see https://jquery.org/license/.
+
+Files: tauri/src/scripts/jquery.i18n.properties.js
+Copyright: jquery-i18n-properties contributors
+License: GPL-2+ or MIT
+Comment:
+ jquery.i18n.properties 1.2.7, dual licensed under the GPL and MIT
+ licenses, see
+ https://github.com/jquery-i18n-properties/jquery-i18n-properties.
+
+Files:
+ tauri/src/apps/icons/*
+ tauri/src/icon/*
+ tauri/src/img/*
+ tauri/src/media/*
+ tauri/src/readme/*
+ tauri/src/README.md
+ tauri/src/CONTRIBUTING.md
+ tauri/src/CODE_OF_CONDUCT.md
+ tauri/src/changelog.md
+Copyright: 2026 win12-online contributors
+License: CC-BY-SA-4.0
+Comment:
+ Independently created media files (graphics, artwork and audio visual
+ material) and the textual content of Win12 Online are licensed under
+ Creative Commons Attribution-ShareAlike 4.0 International, except for
+ the third-party and trademark-restricted files listed below and for
+ any file carrying its own notice.
+
+Files:
+ tauri/src/apps/icons/explorer/*.png
+ tauri/src/apps/icons/setting/*.png
+ tauri/src/icon/files/*.png
+ tauri/src/icon/bilibili.png
+ tauri/src/icon/office.png
+ tauri/src/icon/python.svg
+ tauri/src/icon/pythonEditor.svg
+ tauri/src/icon/word.svg
+ tauri/src/icon/vscode.png
+ tauri/src/icon/wsa.png
+ tauri/src/img/Bing.svg
+ tauri/src/img/corsiri.svg
+ tauri/src/img/earth.webp
+ tauri/src/img/mc.jpg
+ tauri/src/img/office.png
+ tauri/src/img/win11.jpg
+ tauri/src/img/win13.jpg
+ tauri/src/img/yq.jpg
+Copyright: See respective trademark and copyright holders
+License: Reserved-Trademark
+Comment:
+ These graphical assets are copyrighted and, where noted, contain
+ trademarks belonging to third parties (including Microsoft
+ Corporation, Shanghai Kuanyu Digital Technology Co., Ltd.
+ (bilibili), JetBrains s.r.o. and the Python Software Foundation).
+ They are included by the upstream project for descriptive,
+ non-commercial use only, which upstream considers fair use. The
+ complete list with per-file remarks is maintained upstream in
+ tauri/src/apps/NOTICE.md, tauri/src/icon/NOTICE.md and
+ tauri/src/img/NOTICE.md. Re-distributors should perform their own
+ legal review before shipping these assets.
+
+License: EPL-2.0
+ Licensed under the Eclipse Public License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ .
+ https://www.eclipse.org/legal/epl-2.0/
+ .
+ On Debian systems, the full text of the Eclipse Public License 2.0
+ can be found in /usr/share/common-licenses/EPL-2.0.
+
+License: CC-BY-SA-4.0
+ Creative Commons Attribution-ShareAlike 4.0 International Public License
+ .
+ By exercising the Licensed Rights (defined below), You accept and agree
+ to be bound by the terms and conditions of this Creative Commons
+ Attribution-ShareAlike 4.0 International Public License ("Public
+ License"). To the extent this Public License may be interpreted as a
+ contract, You are granted the Licensed Rights in consideration of Your
+ acceptance of these terms and conditions, and the Licensor grants You
+ such rights in consideration of benefits the Licensor receives from
+ making the Licensed Material available under these terms and conditions.
+ .
+ The licensor cannot revoke these freedoms as long as you follow the
+ license terms. Under the license terms you must give appropriate credit,
+ provide a link to the license, indicate if changes were made, and
+ distribute your contributions under the same license as the original.
+ .
+ The complete license text is available at
+ .
+ https://creativecommons.org/licenses/by-sa/4.0/legalcode
+ .
+ On Debian systems, the full text of the CC BY-SA 4.0 license can be
+ found in /usr/share/common-licenses/CC-BY-SA-4.0.
+
+License: CC0-1.0
+ The person who associated a work with this deed has dedicated the work
+ to the public domain by waiving all of his or her rights to the work
+ worldwide under copyright law, including all related and neighboring
+ rights, to the extent allowed by law.
+ .
+ https://creativecommons.org/publicdomain/zero/1.0/
+ .
+ On Debian systems, the full text of the CC0 1.0 Universal license can
+ be found in /usr/share/common-licenses/CC0-1.0.
+
+License: MIT
+ Permission is hereby granted, free of charge, to any person obtaining a
+ copy of this software and associated documentation files (the
+ "Software"), to deal in the Software without restriction, including
+ without limitation the rights to use, copy, modify, merge, publish,
+ distribute, sublicense, and/or sell copies of the Software, and to
+ permit persons to whom the Software is furnished to do so, subject to
+ the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included
+ in all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+License: GPL-2+ or MIT
+ This file may be used under either the GNU General Public License,
+ version 2 or later (see the GPL-2+ license paragraph below), or the MIT
+ License (see the MIT license paragraph above), at your option.
+
+License: GPL-2+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+ .
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ GNU General Public License for more details.
+ .
+ On Debian systems, the full text of the GNU General Public License
+ version 2 can be found in /usr/share/common-licenses/GPL-2.
+
+License: Reserved-Trademark
+ All rights reserved by the respective copyright and trademark holders.
+ The upstream project includes these assets solely for descriptive,
+ non-commercial purposes, which it believes constitutes fair use. They
+ are not covered by the EPL-2.0 or CC BY-SA 4.0 licenses and may not be
+ reusable under the terms of those licenses.

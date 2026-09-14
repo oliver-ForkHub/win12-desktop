@@ -1,0 +1,32 @@
+win12-desktop (0.3.0-1~ubuntu26.04.1) resolute; urgency=medium
+
+  * Initial Ubuntu package.
+
+ -- Oliver Lin <oliver@liuxiaozhen.dev>  Tue, 15 Sep 2026 01:25:00 +0800
+
+win12-desktop (0.2.9-1) UNRELEASED; urgency=medium
+
+  * 优化开始屏幕中的语言选项
+  * 更新语言包
+
+ -- Oliver Lin <oliver@liuxiaozhen.dev>  Mon, 14 Sep 2026 00:00:00 +0800
+
+win12-desktop (0.2.8-1) UNRELEASED; urgency=medium
+
+  * 更新语言包
+  * 新增 snap 包
+
+ -- Oliver Lin <oliver@liuxiaozhen.dev>  Thu, 10 Sep 2026 00:00:00 +0800
+
+win12-desktop (0.2.7-1) UNRELEASED; urgency=medium
+
+  * 更新语言包
+  * 新增 flatpak 版本
+
+ -- Oliver Lin <oliver@liuxiaozhen.dev>  Sat, 05 Sep 2026 00:00:00 +0800
+
+win12-desktop (0.2.6-1) UNRELEASED; urgency=medium
+
+  * Win12 0.2.6 release.
+
+ -- Oliver Lin <oliver@liuxiaozhen.dev>  Sat, 15 Aug 2026 00:00:00 +0800

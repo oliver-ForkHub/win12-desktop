@@ -27,3 +27,4 @@ tauri/src-tauri/vendor/
 
 # snap
 *.snap
+debian/files
