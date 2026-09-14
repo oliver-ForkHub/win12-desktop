@@ -52,7 +52,13 @@
         <p>2.新增snap包</p>
       </description>
     </release>
-  </releases>
+      <release version="0.2.9" date="2026-09-14">
+      <description>
+        <p>1.优化开始屏幕中的语言选项</p>
+        <p>2.更新语言包</p>
+      </description>
+    </release>
+</releases>
 
   <launchable type="desktop-id">
     io.github.win12_online.win12_desktop.desktop
