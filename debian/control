@@ -1,0 +1,34 @@
+Source: win12-desktop
+Section: utils
+Maintainer: Oliver Lin <oliver@liuxiaozhen.dev>
+Build-Depends:
+ debhelper-compat (= 13),
+ cargo,
+ pkgconf,
+ libwebkit2gtk-4.1-dev,
+ libgtk-3-dev,
+ libayatana-appindicator3-dev,
+ librsvg2-dev,
+ libxdo-dev,
+Standards-Version: 4.7.3
+Homepage: https://github.com/win12-online/win12-desktop
+Vcs-Browser: https://github.com/win12-online/win12-desktop
+Vcs-Git: https://github.com/win12-online/win12-desktop.git
+
+Package: win12-desktop
+Architecture: any
+Multi-Arch: foreign
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+ iputils-ping,
+Description: Windows 12-like desktop environment for Linux
+ Win12 Desktop is the standalone desktop client for the Win12 Online
+ web project. Built with Tauri, it embeds the web front end into a
+ native window and provides system integration such as battery and
+ network status reporting, GitHub release update checks, a local login
+ password store, and ping / ping6 support for the built-in terminal.
+ .
+ It ships a Windows 12-style desktop experience including a start
+ menu, window management, a file explorer, settings and a collection
+ of built-in applications.
