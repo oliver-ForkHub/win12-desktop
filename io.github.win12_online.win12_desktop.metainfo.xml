@@ -58,6 +58,11 @@
         <p>2.更新语言包</p>
       </description>
     </release>
+    <release version="0.3.0" date="2026-09-15">
+      <description>
+        <p>打包PPA</p>
+      </description>
+    </release>
 </releases>
 
   <launchable type="desktop-id">
