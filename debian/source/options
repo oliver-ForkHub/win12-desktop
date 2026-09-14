@@ -1,0 +1,4 @@
+# Local build artifacts are not part of the upstream sources and must not
+# be represented in the auto-generated quilt diff. The regex is matched
+# against pathnames relative to the source root (see dpkg-source(1)).
+extend-diff-ignore = (^|/)(\.flatpak-builder|\.flatpak-build|build-dir|node_modules|target)(/|$)|^tauri/(dist|src-tauri/gen)(/|$)|\.snap$
