@@ -25,6 +25,7 @@ dist-ssr
 
 tauri/src-tauri/vendor/
 tauri/src-tauri/.cargo/
+tauri/src-tauri/.cargo-home/
 
 # snap
 *.snap

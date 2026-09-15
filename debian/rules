@@ -11,10 +11,10 @@
 # All Cargo artifacts (registry cache, target dir) are kept inside the crate
 # tree so nothing is written outside the package directory.
 
-# CARGO_HOME is the registry cache location. We force it into the crate tree
-# and clear CARGO_NET so even if a config leak existed, no network call is
-# attempted.
-export CARGO_HOME = $(CURDIR)/tauri/src-tauri/target/cargo-home
+# CARGO_HOME is kept inside the crate tree but OUTSIDE target/, so `cargo
+# clean` (which removes target/) never deletes Cargo's own state mid-run and
+# the registry/cache metadata stays in a stable, well-defined location.
+export CARGO_HOME = $(CURDIR)/tauri/src-tauri/.cargo-home
 export CARGO_NET_OFFLINE = true
 
 TAURI_DIR := tauri/src-tauri
@@ -63,6 +63,16 @@ override_dh_auto_install:
 		debian/$(BINARY)/usr/share/icons/hicolor/256x256/apps/$(APP_ID).png
 
 override_dh_auto_clean:
-	cd $(TAURI_DIR) && cargo clean || true
+	# No `|| true`: `cargo clean` does not resolve dependencies and never
+	# needs the network, so a real failure must surface instead of being
+	# hidden.
+	cd $(TAURI_DIR) && cargo clean
 	rm -f $(TAURI_DIR)/.cargo/config.toml
 	-rmdir $(TAURI_DIR)/.cargo 2>/dev/null || true
+
+# dh_clean removes every *.orig file by default, which would delete the
+# 500+ vendored Cargo.toml.orig files shipped in the .orig.tar.* (see
+# Debian rust-team, bug #1023413). Exclude them so the vendor tree stays
+# byte-identical to what `cargo vendor` produced.
+override_dh_clean:
+	dh_clean -XCargo.toml.orig

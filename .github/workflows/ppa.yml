@@ -187,6 +187,14 @@ jobs:
           dpkg-query -W -f='dput ${Version}\n' dput
           dpkg-buildpackage --version | head -1
 
+      - name: Install a recent Rust toolchain
+        # The distro cargo (kept installed so dpkg Build-Depends are
+        # satisfied) is too old on the GitHub runner to read the v4
+        # Cargo.lock used by this project. Put a modern toolchain first on
+        # PATH for `cargo vendor` and the offline build check; Launchpad
+        # itself builds with resolute's distro cargo, which is current.
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Cross-check version consistency
         shell: bash
         run: |
@@ -296,6 +304,20 @@ jobs:
           }
           echo "changelog (manual): $srcpkg / $v / $d"
 
+      - name: Validate full offline build (Launchpad parity)
+        # debuild -S does not compile, so vendoring errors would otherwise
+        # only appear on Launchpad. Run the exact build sequence here with a
+        # pristine CARGO_HOME and network forcibly disabled. The following
+        # debuild -S runs `clean`, which removes the produced target tree.
+        shell: bash
+        run: |
+          set -euo pipefail
+          src="$BUILD_DIR/${PKG}-${UPSTREAM_VERSION}"
+          cd "$src"
+          CARGO_NET_OFFLINE=true fakeroot make -f debian/rules build
+          test -x "tauri/src-tauri/target/release/${PKG}"
+          echo "offline build OK; Launchpad will reuse this same vendor/ tree."
+
       - name: Build unsigned source package (debuild -S -sa)
         shell: bash
         run: |
@@ -304,7 +326,10 @@ jobs:
           cd "$src"
           # -us -uc: do not sign here; debsign signs with the PPA key later.
           # -sa: include the orig tarball (required for new upstream uploads).
-          debuild -S -sa -us -uc
+          # --no-lintian: lintian is run explicitly (with -i -I) in the next
+          # step; running it twice would unpack the 107 MB tarball again and
+          # make this step fail on W: tags that are overridden there.
+          debuild -S -sa -us -uc --no-lintian
 
       - name: Run lintian (warnings shown, errors fail the job)
         shell: bash

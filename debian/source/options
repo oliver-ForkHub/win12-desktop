@@ -4,4 +4,6 @@
 #
 # `vendor` is intentionally NOT listed here: it is part of the upstream
 # source (shipped in the .orig.tar.*), so it is not a local change.
-extend-diff-ignore = (^|/)(\.flatpak-builder|\.flatpak-build|build-dir|node_modules|target|\.cargo)(/|$)|^tauri/(dist|src-tauri/gen)(/|$)|\.snap$
+# `.cargo` (build-generated config) and `.cargo-home` (CARGO_HOME cache)
+# are build products, not source, so they are ignored.
+extend-diff-ignore = (^|/)(\.flatpak-builder|\.flatpak-build|build-dir|node_modules|target|\.cargo-home|\.cargo)(/|$)|^tauri/(dist|src-tauri/gen)(/|$)|\.snap$

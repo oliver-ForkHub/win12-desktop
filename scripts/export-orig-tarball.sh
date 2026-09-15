@@ -141,13 +141,16 @@ if [[ ! -f "$TAURI_CRATE/Cargo.lock" ]]; then
 fi
 
 echo "==> Vendoring Rust dependencies (the only step that may use the network)"
-cargo vendor --locked --versioned-dirs \
+# cargo vendor prints a sample source-replacement config on stdout; we do
+# not need it (debian/rules generates the real, relocatable config at build
+# time), so discard stdout rather than leaving an unused file behind.
+if ! cargo vendor --locked --versioned-dirs \
   --manifest-path "$TAURI_CRATE/Cargo.toml" \
-  "$VENDOR_TMP" > "$STAGE/vendor-snippet.toml" 2>"$STAGE/vendor.err" || {
+  "$VENDOR_TMP" > /dev/null 2>"$STAGE/vendor.err"; then
   echo "error: cargo vendor failed" >&2
   cat "$STAGE/vendor.err" >&2
   exit 1
-}
+fi
 mv "$VENDOR_TMP" "$VENDOR_DEST"
 
 VENDOR_CRATE_COUNT="$(find "$VENDOR_DEST" -maxdepth 1 -mindepth 1 -type d | wc -l | tr -d ' ')"
@@ -155,6 +158,15 @@ echo "    vendored crates: $VENDOR_CRATE_COUNT"
 echo "    vendor size:    $(du -sh "$VENDOR_DEST" | awk '{print $1}')"
 if [[ "$VENDOR_CRATE_COUNT" -eq 0 ]]; then
   echo "error: vendor directory is empty" >&2
+  exit 1
+fi
+
+# Every vendored crate must carry its checksum manifest; a missing one would
+# make `cargo build --offline` fail on Launchpad.
+if crate="$(find "$VENDOR_DEST" -mindepth 1 -maxdepth 1 -type d \
+             ! -name '.*' ! -exec test -f '{}/.cargo-checksum.json' \; -print -quit)" \
+   && [[ -n "$crate" ]]; then
+  echo "error: vendored crate missing .cargo-checksum.json: $crate" >&2
   exit 1
 fi
 
@@ -201,6 +213,18 @@ if grep -E "^${TOP_DIR//./\\.}/debian(/|$)" "$LISTING" | grep -q .; then
 fi
 if grep -E "(^|/)\\.git($|/)" "$LISTING" | grep -q .; then
   echo "error: tarball must not contain any .git metadata" >&2
+  exit 1
+fi
+
+# Build-time generated Cargo state must never be in the upstream tarball;
+# vendor/ itself is expected, but .cargo (generated config) and .cargo-home
+# (the CARGO_HOME cache) are not.
+if grep -E "^${TOP_DIR//./\\.}/tauri/src-tauri/\\.cargo(/|$)" "$LISTING" | grep -q .; then
+  echo "error: tarball must not contain tauri/src-tauri/.cargo (generated at build time)" >&2
+  exit 1
+fi
+if grep -E "^${TOP_DIR//./\\.}/tauri/src-tauri/\\.cargo-home(/|$)" "$LISTING" | grep -q .; then
+  echo "error: tarball must not contain tauri/src-tauri/.cargo-home" >&2
   exit 1
 fi
 
