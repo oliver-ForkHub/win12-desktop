@@ -117,6 +117,47 @@ export_tree "$ROOT_DIR" "$DEST"
 echo "==> Removing debian/ packaging directory from upstream tree"
 rm -rf "$DEST/debian"
 
+# ----------------------------------------------------------------------------
+# Cargo vendoring for Launchpad/PPA offline builds.
+#
+# Launchpad buildds have no network, so `cargo build` cannot reach
+# https://index.crates.io. We therefore snapshot the full dependency graph
+# (as described by tauri/src-tauri/Cargo.lock) into the upstream tree. The
+# vendor directory goes into the .orig.tar.* (NOT into .debian.tar.xz and NOT
+# into Git) so that Launchpad receives it together with the rest of the
+# source package.
+#
+# `cargo vendor` is run against the *working tree* of the locked crate so the
+# result exactly matches Cargo.lock, then the produced tree is copied into the
+# staging directory. Cargo never writes into $DEST during this step.
+# ----------------------------------------------------------------------------
+TAURI_CRATE="$ROOT_DIR/tauri/src-tauri"
+VENDOR_DEST="$DEST/tauri/src-tauri/vendor"
+VENDOR_TMP="$STAGE/vendor"
+
+if [[ ! -f "$TAURI_CRATE/Cargo.lock" ]]; then
+  echo "error: $TAURI_CRATE/Cargo.lock not found; cannot vendor without a lock file" >&2
+  exit 1
+fi
+
+echo "==> Vendoring Rust dependencies (the only step that may use the network)"
+cargo vendor --locked --versioned-dirs \
+  --manifest-path "$TAURI_CRATE/Cargo.toml" \
+  "$VENDOR_TMP" > "$STAGE/vendor-snippet.toml" 2>"$STAGE/vendor.err" || {
+  echo "error: cargo vendor failed" >&2
+  cat "$STAGE/vendor.err" >&2
+  exit 1
+}
+mv "$VENDOR_TMP" "$VENDOR_DEST"
+
+VENDOR_CRATE_COUNT="$(find "$VENDOR_DEST" -maxdepth 1 -mindepth 1 -type d | wc -l | tr -d ' ')"
+echo "    vendored crates: $VENDOR_CRATE_COUNT"
+echo "    vendor size:    $(du -sh "$VENDOR_DEST" | awk '{print $1}')"
+if [[ "$VENDOR_CRATE_COUNT" -eq 0 ]]; then
+  echo "error: vendor directory is empty" >&2
+  exit 1
+fi
+
 # Defence in depth: a Git archive never contains these, but verify it so a
 # future refactor cannot silently reintroduce the bug.
 echo "==> Checking for leaked Git metadata"
