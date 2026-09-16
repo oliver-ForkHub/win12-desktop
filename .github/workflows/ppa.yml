@@ -37,7 +37,6 @@ env:
   PKG: win12-desktop
   DIST: resolute
   UBUNTU_RELEASE: '26.04'
-  DEBIAN_REVISION: '1~ubuntu26.04.1'
   PPA: ppa:win12-online/win12-desktop
 
 jobs:
@@ -382,89 +381,107 @@ jobs:
           # make this step fail on W: tags that are overridden there.
           debuild -S -sa -us -uc 
 
-      - name: Run lintian (report only)
-        run: |
-          set -o pipefail
-          lintian -i -I --show-overrides "$changes" 2>&1 | tee lintian.log || true
+          - name: Run lintian (report only)
+          shell: bash
+          run: |
+            set -euo pipefail
 
-          if grep -qE '^E:' lintian.log; then
-            echo "::warning::lintian reported error-level tags; see lintian.log"
-            grep -E '^E:' lintian.log || true
-          else
-            echo "lintian: 没有 E: 级别问题。"
-          fi
+            cd "$BUILD_DIR"
+            changes="${PKG}_${DEBIAN_VERSION}_source.changes"
 
-          echo "Lintian 仅用于报告，不阻止 PPA 构建。"
+            [[ -f "$changes" ]] || {
+              echo "::error::找不到 .changes 文件: $changes"
+              exit 1
+            }
 
-      - name: Import PPA GPG key into an ephemeral keyring
-        if: env.UPLOAD == '1'
-        shell: bash
-        env:
-          PPA_GPG_PRIVATE_KEY: ${{ secrets.PPA_GPG_PRIVATE_KEY }}
-          PPA_GPG_PASSPHRASE: ${{ secrets.PPA_GPG_PASSPHRASE }}
-          PPA_GPG_KEY_ID: ${{ secrets.PPA_GPG_KEY_ID }}
-        run: |
-          set -euo pipefail
-          install -d -m 700 "$GPG_HOME"
-          cat > "$GPG_HOME/gpg-agent.conf" <<'EOF'
-          allow-loopback-pinentry
-          allow-preset-passphrase
-          default-cache-ttl 86400
-          max-cache-ttl 86400
-          EOF
-          cat > "$GPG_HOME/gpg.conf" <<'EOF'
-          use-agent
-          pinentry-mode loopback
-          EOF
-          chmod 600 "$GPG_HOME"/*.conf
-          gpgconf --kill gpg-agent || true
+            lintian \
+              -i \
+              -I \
+              --show-overrides \
+              "$changes" \
+              2>&1 | tee "$BUILD_DIR/lintian.log" || true
 
-          # Import the ASCII-armored key from the secret without echoing it.
-          printf '%s' "$PPA_GPG_PRIVATE_KEY" | gpg --batch --no-tty --import
+            if grep -qE '^E:' "$BUILD_DIR/lintian.log"; then
+              echo "::warning::lintian reported error-level tags; see lintian.log"
+              grep -E '^E:' "$BUILD_DIR/lintian.log" || true
+            else
+              echo "lintian: 没有 E: 级别问题。"
+            fi
 
-          fpr="$(gpg --batch --list-secret-keys --with-colons \
-                   | awk -F: '/^fpr:/{print $10; exit}')"
-          if [[ "${fpr^^}" != "${PPA_GPG_KEY_ID^^}" ]]; then
-            echo "::error::导入的密钥指纹与 PPA_GPG_KEY_ID 不一致"
-            exit 1
-          fi
+            echo "Lintian 仅用于报告，不阻止 PPA 构建。"
 
-          preset=""
-          for cand in \
-            "$(command -v gpg-preset-passphrase 2>/dev/null || true)" \
-            /usr/lib/gnupg/gpg-preset-passphrase \
-            /usr/libexec/gpg-preset-passphrase
-          do
-            if [[ -n "$cand" && -x "$cand" ]]; then preset="$cand"; break; fi
-          done
-          [[ -n "$preset" ]] || { echo "::error::找不到 gpg-preset-passphrase"; exit 1; }
+          - name: Import PPA GPG key into an ephemeral keyring
+          if: env.UPLOAD == '1'
+          shell: bash
+          env:
+            GNUPGHOME: ${{ env.GPG_HOME }}
+            PPA_GPG_PRIVATE_KEY: ${{ secrets.PPA_GPG_PRIVATE_KEY }}
+            PPA_GPG_PASSPHRASE: ${{ secrets.PPA_GPG_PASSPHRASE }}
+            PPA_GPG_KEY_ID: ${{ secrets.PPA_GPG_KEY_ID }}
+          run: |
+            set -euo pipefail
 
-          # grp: records (field 10 = keygrip) only appear with --with-keygrip.
-          while IFS= read -r grip; do
-            [[ -n "$grip" ]] && printf '%s' "$PPA_GPG_PASSPHRASE" | "$preset" --preset "$grip"
-          done < <(gpg --batch --list-secret-keys --with-keygrip --with-colons "$fpr" \
-                     | awk -F: '/^grp:/{print $10}')
+            install -d -m 700 "$GNUPGHOME"
 
-          # Prove the passphrase was really cached in the agent and that a
-          # fully non-interactive sign works (this is exactly how debsign
-          # invokes gpg: no --passphrase-fd, relying on the preset cache).
-          echo "ppa gpg self-test" | gpg --batch --no-tty \
-            --local-user "$fpr" --clearsign -o /dev/null
+            cat > "$GNUPGHOME/gpg-agent.conf" <<'EOF'
+            allow-loopback-pinentry
+            allow-preset-passphrase
+            default-cache-ttl 86400
+            max-cache-ttl 86400
+            EOF
 
-          echo "GPG key ready: ...${fpr: -16} (full fingerprint not logged)"
+            cat > "$GNUPGHOME/gpg.conf" <<'EOF'
+            use-agent
+            pinentry-mode loopback
+            EOF
+
+            chmod 600 "$GNUPGHOME"/*.conf
+            gpgconf --kill gpg-agent || true
+
+            printf '%s' "$PPA_GPG_PRIVATE_KEY" |
+              gpg --batch --no-tty --import
+
+            echo "::group::Imported secret keys"
+            gpg --batch --list-secret-keys --keyid-format LONG
+            echo "::endgroup::"
+
+            fpr="$(
+              gpg --batch --list-secret-keys --with-colons |
+                awk -F: '/^fpr:/{print $10; exit}'
+            )"
+
+            [[ -n "$fpr" ]] || {
+              echo "::error::导入后没有找到 secret key"
+              exit 1
+            }
+
+            if [[ "${fpr^^}" != "${PPA_GPG_KEY_ID^^}" ]]; then
+              echo "::error::导入的密钥指纹与 PPA_GPG_KEY_ID 不一致"
+              exit 1
+            fi
+
 
       - name: Sign dsc/buildinfo/changes with debsign
         if: env.UPLOAD == '1'
         shell: bash
         env:
+          GNUPGHOME: ${{ env.GPG_HOME }}
           PPA_GPG_KEY_ID: ${{ secrets.PPA_GPG_KEY_ID }}
+          DEBEMAIL: oliver@liuxiaozhen.dev
+          DEBFULLNAME: Oliver Lin
         run: |
           set -euo pipefail
+
           cd "$BUILD_DIR"
           changes="${PKG}_${DEBIAN_VERSION}_source.changes"
-          # -k must be attached to the id ("-kFINGERPRINT") or debsign would
-          # treat the fingerprint as a file name.
-          debsign --re-sign -k"$PPA_GPG_KEY_ID" "$changes"
+
+          echo "GNUPGHOME=$GNUPGHOME"
+          gpg --batch --list-secret-keys --keyid-format LONG
+
+          debsign \
+            --re-sign \
+            -k"$PPA_GPG_KEY_ID" \
+            "$changes"
 
       - name: Verify GPG signatures
         if: env.UPLOAD == '1'
