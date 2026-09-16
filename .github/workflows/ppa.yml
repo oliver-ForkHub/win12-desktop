@@ -329,11 +329,26 @@ jobs:
           v="$(dpkg-parsechangelog -l "$src/debian/changelog" -S Version)"
           d="$(dpkg-parsechangelog -l "$src/debian/changelog" -S Distribution)"
           [[ "$srcpkg" == "$PKG" ]] || { echo "::error::changelog Source '$srcpkg' != '$PKG'"; exit 1; }
-          [[ "$v" == "$DEBIAN_VERSION" ]] || {
-            echo "::error::debian/changelog 首条版本为 '$v'，期望 '$DEBIAN_VERSION'。"
-            echo "::error::debian/changelog 为人工维护文件，CI 不会自动修改；请先手工添加该版本条目（distribution: $DIST）并推送到 Release tag 所在提交。"
+          # The Debian revision number (the N in -N~ubuntu26.04.1) is
+          # hand-maintained in debian/changelog and may be bumped for
+          # re-packaging without a new upstream release (e.g. -1, -2, -3).
+          # Validate the upstream version and Ubuntu suffix, but accept any
+          # positive integer revision.
+          cl_upstream="${v%%-*}"
+          cl_revision="${v#*-}"
+          [[ "$cl_upstream" == "$UPSTREAM_VERSION" ]] || {
+            echo "::error::changelog 上游版本 '$cl_upstream' != '$UPSTREAM_VERSION'。"
+            echo "::error::debian/changelog 为人工维护文件，CI 不会自动修改；请先手工添加该版本条目。"
             exit 1
           }
+          [[ "$cl_revision" =~ ^[0-9]+~ubuntu${UBUNTU_RELEASE//./\\.}(\.[0-9]+)?$ ]] || {
+            echo "::error::changelog 版本 '$v' 的 Debian revision '$cl_revision' 不符合格式 'N~ubuntu${UBUNTU_RELEASE}[.M]'。"
+            exit 1
+          }
+          # Override DEBIAN_VERSION with the actual changelog version so all
+          # downstream steps (debuild, lintian, upload) reference the correct
+          # revision and file names.
+          echo "DEBIAN_VERSION=$v" >> "$GITHUB_ENV"
           [[ "$d" == "$DIST" ]] || {
             echo "::error::debian/changelog 首条发行版为 '$d'，期望 '$DIST'；请手工修正后重新发布。"
             exit 1
