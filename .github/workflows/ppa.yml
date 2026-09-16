@@ -405,55 +405,55 @@ jobs:
 
           echo "Lintian 仅用于报告，不阻止 PPA 构建。"
 
-          - name: Import PPA GPG key into an ephemeral keyring
-          if: env.UPLOAD == '1'
-          shell: bash
-          env:
-            GNUPGHOME: ${{ env.GPG_HOME }}
-            PPA_GPG_PRIVATE_KEY: ${{ secrets.PPA_GPG_PRIVATE_KEY }}
-            PPA_GPG_PASSPHRASE: ${{ secrets.PPA_GPG_PASSPHRASE }}
-            PPA_GPG_KEY_ID: ${{ secrets.PPA_GPG_KEY_ID }}
-          run: |
-            set -euo pipefail
+      - name: Import PPA GPG key into an ephemeral keyring
+        if: env.UPLOAD == '1'
+        shell: bash
+        env:
+          GNUPGHOME: ${{ env.GPG_HOME }}
+          PPA_GPG_PRIVATE_KEY: ${{ secrets.PPA_GPG_PRIVATE_KEY }}
+          PPA_GPG_PASSPHRASE: ${{ secrets.PPA_GPG_PASSPHRASE }}
+          PPA_GPG_KEY_ID: ${{ secrets.PPA_GPG_KEY_ID }}
+        run: |
+          set -euo pipefail
 
-            install -d -m 700 "$GNUPGHOME"
+          install -d -m 700 "$GNUPGHOME"
 
-            cat > "$GNUPGHOME/gpg-agent.conf" <<'EOF'
-            allow-loopback-pinentry
-            allow-preset-passphrase
-            default-cache-ttl 86400
-            max-cache-ttl 86400
-            EOF
+          cat > "$GNUPGHOME/gpg-agent.conf" <<'EOF'
+          allow-loopback-pinentry
+          allow-preset-passphrase
+          default-cache-ttl 86400
+          max-cache-ttl 86400
+          EOF
 
-            cat > "$GNUPGHOME/gpg.conf" <<'EOF'
-            use-agent
-            pinentry-mode loopback
-            EOF
+          cat > "$GNUPGHOME/gpg.conf" <<'EOF'
+          use-agent
+          pinentry-mode loopback
+          EOF
 
-            chmod 600 "$GNUPGHOME"/*.conf
-            gpgconf --kill gpg-agent || true
+          chmod 600 "$GNUPGHOME"/*.conf
+          gpgconf --kill gpg-agent || true
 
-            printf '%s' "$PPA_GPG_PRIVATE_KEY" |
-              gpg --batch --no-tty --import
+          printf '%s' "$PPA_GPG_PRIVATE_KEY" |
+            gpg --batch --no-tty --import
 
-            echo "::group::Imported secret keys"
-            gpg --batch --list-secret-keys --keyid-format LONG
-            echo "::endgroup::"
+          echo "::group::Imported secret keys"
+          gpg --batch --list-secret-keys --keyid-format LONG
+          echo "::endgroup::"
 
-            fpr="$(
-              gpg --batch --list-secret-keys --with-colons |
-                awk -F: '/^fpr:/{print $10; exit}'
-            )"
+          fpr="$(
+            gpg --batch --list-secret-keys --with-colons |
+              awk -F: '/^fpr:/{print $10; exit}'
+          )"
 
-            [[ -n "$fpr" ]] || {
-              echo "::error::导入后没有找到 secret key"
-              exit 1
-            }
+          [[ -n "$fpr" ]] || {
+            echo "::error::导入后没有找到 secret key"
+            exit 1
+          }
 
-            if [[ "${fpr^^}" != "${PPA_GPG_KEY_ID^^}" ]]; then
-              echo "::error::导入的密钥指纹与 PPA_GPG_KEY_ID 不一致"
-              exit 1
-            fi
+          if [[ "${fpr^^}" != "${PPA_GPG_KEY_ID^^}" ]]; then
+            echo "::error::导入的密钥指纹与 PPA_GPG_KEY_ID 不一致"
+            exit 1
+          fi
 
 
       - name: Sign dsc/buildinfo/changes with debsign
