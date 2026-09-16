@@ -365,7 +365,7 @@ jobs:
           # --no-lintian: lintian is run explicitly (with -i -I) in the next
           # step; running it twice would unpack the 107 MB tarball again and
           # make this step fail on W: tags that are overridden there.
-          debuild -S -sa -us -uc --no-lintian
+          debuild -S -sa -us -uc 
 
       - name: Run lintian (warnings shown, errors fail the job)
         shell: bash
