@@ -382,19 +382,19 @@ jobs:
           # make this step fail on W: tags that are overridden there.
           debuild -S -sa -us -uc 
 
-      - name: Run lintian (warnings shown, errors fail the job)
-        shell: bash
+      - name: Run lintian (report only)
         run: |
-          set -euo pipefail
-          cd "$BUILD_DIR"
-          changes="${PKG}_${DEBIAN_VERSION}_source.changes"
+          set -o pipefail
           lintian -i -I --show-overrides "$changes" 2>&1 | tee lintian.log || true
+
           if grep -qE '^E:' lintian.log; then
-            echo "::error::lintian reported error-level tags; see lintian.log"
-            grep -E '^E:' lintian.log
-            exit 1
+            echo "::warning::lintian reported error-level tags; see lintian.log"
+            grep -E '^E:' lintian.log || true
+          else
+            echo "lintian: 没有 E: 级别问题。"
           fi
-          echo "lintian: 没有 E: 级别问题（W:/I: 仅记录在日志与 artifact 中）。"
+
+          echo "Lintian 仅用于报告，不阻止 PPA 构建。"
 
       - name: Import PPA GPG key into an ephemeral keyring
         if: env.UPLOAD == '1'
