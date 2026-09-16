@@ -371,41 +371,39 @@ jobs:
           set -euo pipefail
           src="$BUILD_DIR/${PKG}-${UPSTREAM_VERSION}"
           cd "$src"
+
           # -us -uc: do not sign here; debsign signs with the PPA key later.
           # -sa: include the orig tarball (required for new upstream uploads).
-          # --no-lintian: lintian is run explicitly (with -i -I) in the next
-          # step; running it twice would unpack the 107 MB tarball again and
-          # make this step fail on W: tags that are overridden there.
-          debuild -S -sa -us -uc 
+          debuild -S -sa -us -uc
 
-          - name: Run lintian (report only)
-          shell: bash
-          run: |
-            set -euo pipefail
+      - name: Run lintian (report only)
+        shell: bash
+        run: |
+          set -euo pipefail
 
-            cd "$BUILD_DIR"
-            changes="${PKG}_${DEBIAN_VERSION}_source.changes"
+          cd "$BUILD_DIR"
+          changes="${PKG}_${DEBIAN_VERSION}_source.changes"
 
-            [[ -f "$changes" ]] || {
-              echo "::error::找不到 .changes 文件: $changes"
-              exit 1
-            }
+          [[ -f "$changes" ]] || {
+            echo "::error::找不到 .changes 文件: $changes"
+            exit 1
+          }
 
-            lintian \
-              -i \
-              -I \
-              --show-overrides \
-              "$changes" \
-              2>&1 | tee "$BUILD_DIR/lintian.log" || true
+          lintian \
+            -i \
+            -I \
+            --show-overrides \
+            "$changes" \
+            2>&1 | tee "$BUILD_DIR/lintian.log" || true
 
-            if grep -qE '^E:' "$BUILD_DIR/lintian.log"; then
-              echo "::warning::lintian reported error-level tags; see lintian.log"
-              grep -E '^E:' "$BUILD_DIR/lintian.log" || true
-            else
-              echo "lintian: 没有 E: 级别问题。"
-            fi
+          if grep -qE '^E:' "$BUILD_DIR/lintian.log"; then
+            echo "::warning::lintian reported error-level tags; see lintian.log"
+            grep -E '^E:' "$BUILD_DIR/lintian.log" || true
+          else
+            echo "lintian: 没有 E: 级别问题。"
+          fi
 
-            echo "Lintian 仅用于报告，不阻止 PPA 构建。"
+          echo "Lintian 仅用于报告，不阻止 PPA 构建。"
 
           - name: Import PPA GPG key into an ephemeral keyring
           if: env.UPLOAD == '1'
