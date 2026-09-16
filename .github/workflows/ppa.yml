@@ -153,7 +153,43 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+          fetch-tags: true
           lfs: true
+
+      # For release events, checkout already uses the tag ref, so HEAD and
+      # tag are aligned by definition. For workflow_dispatch the user picks a
+      # branch (checked out as HEAD) and types a tag (used for the version
+      # number); those can diverge. Verify the tag's commit is an ancestor of
+      # (or equal to) HEAD so the branch is guaranteed to contain everything
+      # the tag points at — the package is then built from the branch HEAD
+      # code, not from the tag's older commit.
+      - name: Verify HEAD alignment with tag (workflow_dispatch only)
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
+        run: |
+          set -euo pipefail
+          tag_sha="$(git rev-parse "refs/tags/${RELEASE_TAG}^{commit}" 2>/dev/null || true)"
+          if [[ -z "$tag_sha" ]]; then
+            git fetch origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+            tag_sha="$(git rev-parse "refs/tags/${RELEASE_TAG}^{commit}")"
+          fi
+          head_sha="$(git rev-parse HEAD)"
+          echo "tag  commit: $tag_sha"
+          echo "HEAD commit: $head_sha"
+          if [[ "$tag_sha" == "$head_sha" ]]; then
+            echo "HEAD 等于 tag 的 commit — 完全对齐。"
+            exit 0
+          fi
+          if git merge-base --is-ancestor "$tag_sha" "$head_sha"; then
+            echo "HEAD 在 tag 之后 — 分支包含 tag 的全部代码加上新增提交。"
+            echo "包将从分支 HEAD 代码构建，版本号来自 tag。"
+          else
+            echo "::error::HEAD ($head_sha) 不包含 tag '$RELEASE_TAG' ($tag_sha) 的提交。"
+            echo "选中的分支与该 tag 无继承关系；请选择包含此 tag 的分支。"
+            exit 1
+          fi
 
       - name: Re-assert recursive submodule initialisation
         shell: bash
