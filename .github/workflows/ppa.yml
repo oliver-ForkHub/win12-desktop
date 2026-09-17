@@ -187,15 +187,6 @@ jobs:
             exit 1
           fi
 
-      - name: Re-assert recursive submodule initialisation
-        shell: bash
-        run: |
-          set -euo pipefail
-          git submodule sync --recursive
-          git submodule update --init --recursive
-          echo "::group::git submodule status --recursive"
-          git submodule status --recursive
-          echo "::endgroup::"
 
       - name: Install packaging toolchain
         shell: bash
@@ -209,13 +200,14 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             ca-certificates tar xz-utils gzip bzip2 \
             build-essential debhelper devscripts dpkg-dev fakeroot lintian dput \
-            cargo rustc pkgconf python3 git git-lfs gnupg \
+            cargo rustc pkgconf python3 git git-lfs gnupg gpg-agent \
             libwebkit2gtk-4.1-dev \
             libgtk-3-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev \
             libxdo-dev
           git lfs version || true
+          command -v gpg-preset-passphrase
           dpkg-query -W -f='dput ${Version}\n' dput
           dpkg-buildpackage --version | head -1
 
@@ -482,15 +474,14 @@ jobs:
 
           # 预先缓存私钥密码，避免 debsign 尝试打开 /dev/tty
           if [[ -n "${PPA_GPG_PASSPHRASE:-}" ]]; then
-            gpg-preset-passphrase \
-              --preset \
-              "$PPA_GPG_KEY_ID" \
-              <<< "$PPA_GPG_PASSPHRASE"
+            preset="$(command -v gpg-preset-passphrase)"
+            "$preset" --preset "$PPA_GPG_KEY_ID" <<< "$PPA_GPG_PASSPHRASE"
+          else
+            echo "::error::PPA_GPG_PASSPHRASE 为空，无法进行非交互式签名。"
+            exit 1
           fi
 
-          # 非交互式签名
-          export GPG_TTY="$(tty || true)"
-
+          # 非交互式签名；不要依赖 runner 上存在可用的 TTY。
           debsign \
             --re-sign \
             -k"$PPA_GPG_KEY_ID" \
