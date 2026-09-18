@@ -192,11 +192,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
           sudo apt-get update
-          # debian/rules invokes cargo directly (no dh-sequence-rust addon),
-          # so the Rust toolchain plus the Tauri/GTK Build-Depends from
-          # debian/control are sufficient. These must all be present because
-          # dpkg-buildpackage verifies Build-Depends even for a source build.
+
           sudo apt-get install -y --no-install-recommends \
             ca-certificates tar xz-utils gzip bzip2 \
             build-essential debhelper devscripts dpkg-dev fakeroot lintian dput \
@@ -206,8 +204,16 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev \
             libxdo-dev
+
           git lfs version || true
-          command -v gpg-preset-passphrase
+
+          echo "=== GPG tools ==="
+          gpg --version
+          gpg-agent --version
+
+          echo "=== Locate gpg-preset-passphrase ==="
+          find /usr -type f -name gpg-preset-passphrase 2>/dev/null || true
+
           dpkg-query -W -f='dput ${Version}\n' dput
           dpkg-buildpackage --version | head -1
 
