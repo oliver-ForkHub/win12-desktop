@@ -464,30 +464,33 @@ jobs:
           DEBEMAIL: oliver@liuxiaozhen.dev
           DEBFULLNAME: Oliver Lin
         run: |
-          set -euo pipefail
 
-          cd "$BUILD_DIR"
-          changes="${PKG}_${DEBIAN_VERSION}_source.changes"
-
-          echo "GNUPGHOME=$GNUPGHOME"
-          gpg --batch --list-secret-keys --keyid-format LONG
-
-          # 确保 gpg-agent 使用当前 GNUPGHOME
+          # Restart the agent using the current GNUPGHOME.
           gpgconf --kill gpg-agent || true
-
-          # 启动 gpg-agent
           gpg-connect-agent /bye
 
-          # 预先缓存私钥密码，避免 debsign 尝试打开 /dev/tty
-          if [[ -n "${PPA_GPG_PASSPHRASE:-}" ]]; then
-            preset="$(command -v gpg-preset-passphrase)"
-            "$preset" --preset "$PPA_GPG_KEY_ID" <<< "$PPA_GPG_PASSPHRASE"
-          else
-            echo "::error::PPA_GPG_PASSPHRASE 为空，无法进行非交互式签名。"
+          # gpg-preset-passphrase requires the keygrip, not the fingerprint.
+          keygrip="$(
+            gpg --batch --with-keygrip --list-secret-keys \
+              "$PPA_GPG_KEY_ID" |
+              awk -F: '$1 == "grp" { print $10; exit }'
+          )"
+
+          if [[ -z "$keygrip" ]]; then
+            echo "::error::无法找到 PPA 签名密钥的 keygrip"
+            gpg --batch --with-keygrip --list-secret-keys \
+              "$PPA_GPG_KEY_ID"
             exit 1
           fi
 
-          # 非交互式签名；不要依赖 runner 上存在可用的 TTY。
+          echo "Keygrip found; presetting passphrase."
+
+          gpg-preset-passphrase \
+            --preset \
+            "$keygrip" \
+            <<< "$PPA_GPG_PASSPHRASE"
+
+          # Non-interactive signing.
           debsign \
             --re-sign \
             -k"$PPA_GPG_KEY_ID" \
