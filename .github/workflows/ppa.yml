@@ -464,37 +464,144 @@ jobs:
           DEBEMAIL: oliver@liuxiaozhen.dev
           DEBFULLNAME: Oliver Lin
         run: |
+          set -Eeuo pipefail
 
-          # Restart the agent using the current GNUPGHOME.
-          gpgconf --kill gpg-agent || true
-          gpg-connect-agent /bye
+          cd "$BUILD_DIR"
 
-          # gpg-preset-passphrase requires the keygrip, not the fingerprint.
-          keygrip="$(
-            gpg --batch --with-keygrip --list-secret-keys \
-              "$PPA_GPG_KEY_ID" |
-              awk -F: '$1 == "grp" { print $10; exit }'
-          )"
+          changes="${PKG}_${DEBIAN_VERSION}_source.changes"
 
-          if [[ -z "$keygrip" ]]; then
-            echo "::error::无法找到 PPA 签名密钥的 keygrip"
-            gpg --batch --with-keygrip --list-secret-keys \
-              "$PPA_GPG_KEY_ID"
+          if [[ ! -f "$changes" ]]; then
+            echo "::error::找不到待签名的 .changes 文件: $changes"
             exit 1
           fi
 
-          echo "Keygrip found; presetting passphrase."
+          echo "::group::GPG 环境信息"
+          echo "GNUPGHOME: $GNUPGHOME"
+          echo "Key ID  : ${PPA_GPG_KEY_ID:0:8}...${PPA_GPG_KEY_ID: -8}"
+          echo "::endgroup::"
 
-          gpg-preset-passphrase \
-            --preset \
-            "$keygrip" \
-            <<< "$PPA_GPG_PASSPHRASE"
+          # 检查签名密钥是否存在
+          if ! gpg \
+              --batch \
+              --no-tty \
+              --list-secret-keys \
+              --keyid-format LONG \
+              "$PPA_GPG_KEY_ID"; then
+            echo "::error::无法读取 PPA 签名密钥"
+            exit 1
+          fi
 
-          # Non-interactive signing.
-          debsign \
-            --re-sign \
-            -k"$PPA_GPG_KEY_ID" \
-            "$changes"
+          # 确保当前 gpg-agent 使用的是本次运行的临时 GNUPGHOME
+          gpgconf --kill gpg-agent || true
+          gpg-connect-agent /bye
+
+          # Ubuntu/Debian 中 gpg-preset-passphrase 可能位于：
+          # /usr/lib/gnupg/gpg-preset-passphrase
+          PRESET_PASSPHRASE="$(
+            command -v gpg-preset-passphrase 2>/dev/null || true
+          )"
+
+          if [[ -z "$PRESET_PASSPHRASE" ]]; then
+            for candidate in \
+              /usr/lib/gnupg/gpg-preset-passphrase \
+              /usr/libexec/gpg-preset-passphrase \
+              /usr/lib/*/gnupg/gpg-preset-passphrase
+            do
+              if [[ -x "$candidate" ]]; then
+                PRESET_PASSPHRASE="$candidate"
+                break
+              fi
+            done
+          fi
+
+          if [[ -z "$PRESET_PASSPHRASE" || ! -x "$PRESET_PASSPHRASE" ]]; then
+            echo "::error::找不到可执行的 gpg-preset-passphrase"
+            echo "请确认安装了 gpg-agent 包"
+            dpkg -L gpg-agent 2>/dev/null |
+              grep -F 'gpg-preset-passphrase' || true
+            exit 1
+          fi
+
+          echo "gpg-preset-passphrase: $PRESET_PASSPHRASE"
+
+          # 读取所有 secret key 的 keygrip。
+          #
+          # 注意：
+          #   gpg-preset-passphrase 接受的是 keygrip，
+          #   不是 fingerprint、Key ID 或邮箱。
+          mapfile -t KEYGRIPS < <(
+            gpg \
+              --batch \
+              --with-colons \
+              --with-keygrip \
+              --list-secret-keys \
+              "$PPA_GPG_KEY_ID" |
+              awk -F: '$1 == "grp" && $10 != "" { print $10 }'
+          )
+
+          if [[ "${#KEYGRIPS[@]}" -eq 0 ]]; then
+            echo "::error::无法找到 PPA 签名密钥的 keygrip"
+
+            echo "::group::GPG keygrip 调试信息"
+            gpg \
+              --batch \
+              --with-keygrip \
+              --list-secret-keys \
+              --keyid-format LONG \
+              "$PPA_GPG_KEY_ID" || true
+            echo "::endgroup::"
+
+            exit 1
+          fi
+
+          echo "找到 ${#KEYGRIPS[@]} 个 keygrip"
+
+          # 同时缓存主密钥和签名子密钥。
+          # 你的密钥目前类似：
+          #   主密钥 [SC]
+          #   签名子密钥 [S]
+          #
+          # 不把密码写入命令行，避免出现在进程参数中。
+          for keygrip in "${KEYGRIPS[@]}"; do
+            echo "预缓存 keygrip: ${keygrip:0:8}...${keygrip: -8}"
+
+            if ! printf '%s' "$PPA_GPG_PASSPHRASE" |
+                "$PRESET_PASSPHRASE" --preset "$keygrip"
+            then
+              echo "::error::无法预缓存 keygrip: ${keygrip:0:8}...${keygrip: -8}"
+              exit 1
+            fi
+          done
+
+          # 确认 agent 已经可以连接
+          if ! gpg-connect-agent 'GETINFO version' /bye >/dev/null; then
+            echo "::error::gpg-agent 无法正常连接"
+            exit 1
+          fi
+
+          echo "GPG agent 已启动，密钥密码已预缓存。"
+
+          # debsign 使用 GPG agent 完成非交互式签名。
+          # 不再设置 GPG_TTY，避免 tty 不存在或触发交互式 pinentry。
+          if ! debsign \
+              --re-sign \
+              --no-conf \
+              -k"$PPA_GPG_KEY_ID" \
+              "$changes"
+          then
+            echo "::error::debsign 签名失败"
+            echo "::group::签名失败后的 GPG 状态"
+            gpg \
+              --batch \
+              --list-secret-keys \
+              --keyid-format LONG \
+              "$PPA_GPG_KEY_ID" || true
+            gpg-connect-agent 'GETINFO version' /bye || true
+            echo "::endgroup::"
+            exit 1
+          fi
+
+          echo "签名成功: $changes"
 
       - name: Verify GPG signatures
         if: env.UPLOAD == '1'
