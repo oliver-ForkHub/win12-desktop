@@ -584,8 +584,8 @@ jobs:
           # debsign 使用 GPG agent 完成非交互式签名。
           # 不再设置 GPG_TTY，避免 tty 不存在或触发交互式 pinentry。
           if ! debsign \
-              --re-sign \
               --no-conf \
+              --re-sign \
               -k"$PPA_GPG_KEY_ID" \
               "$changes"
           then
