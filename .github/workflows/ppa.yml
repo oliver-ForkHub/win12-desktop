@@ -730,13 +730,5 @@ jobs:
           name: ppa-source-${{ env.UPSTREAM_VERSION }}
           if-no-files-found: ignore
           retention-days: 14
-          path: |
-            ppa-artifacts/*.dsc
-            ppa-artifacts/*.orig.tar.gz
-            ppa-artifacts/*.debian.tar.xz
-            ppa-artifacts/*.buildinfo
-            ppa-artifacts/*.changes
-            ppa-artifacts/*.build
-            ppa-artifacts/*.upload
-            ppa-artifacts/lintian.log
+          path: ppa-artifacts/
 
