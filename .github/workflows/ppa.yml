@@ -704,6 +704,25 @@ jobs:
           echo "演练模式：已构建源码包并通过 lintian，但未签名/未上传 PPA。"
           echo "手动触发时勾选 confirm_upload 才会真正上传。"
 
+      - name: Stage source package artifacts
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          artifact_dir="$GITHUB_WORKSPACE/ppa-artifacts"
+          rm -rf "$artifact_dir"
+          mkdir -p "$artifact_dir"
+
+          cp -v "$BUILD_DIR"/*.dsc "$artifact_dir/" 2>/dev/null || true
+          cp -v "$BUILD_DIR"/*.orig.tar.gz "$artifact_dir/" 2>/dev/null || true
+          cp -v "$BUILD_DIR"/*.debian.tar.xz "$artifact_dir/" 2>/dev/null || true
+          cp -v "$BUILD_DIR"/*.buildinfo "$artifact_dir/" 2>/dev/null || true
+          cp -v "$BUILD_DIR"/*.changes "$artifact_dir/" 2>/dev/null || true
+          cp -v "$BUILD_DIR"/*.build "$artifact_dir/" 2>/dev/null || true
+          cp -v "$BUILD_DIR"/*.upload "$artifact_dir/" 2>/dev/null || true
+          cp -v "$BUILD_DIR"/lintian.log "$artifact_dir/" 2>/dev/null || true
+
       - name: Upload source package artifacts
         if: always()
         uses: actions/upload-artifact@v7
@@ -711,12 +730,5 @@ jobs:
           name: ppa-source-${{ env.UPSTREAM_VERSION }}
           if-no-files-found: ignore
           retention-days: 14
-          path: |
-            ${{ env.BUILD_DIR }}/*.dsc
-            ${{ env.BUILD_DIR }}/*.orig.tar.gz
-            ${{ env.BUILD_DIR }}/*.debian.tar.xz
-            ${{ env.BUILD_DIR }}/*.buildinfo
-            ${{ env.BUILD_DIR }}/*.changes
-            ${{ env.BUILD_DIR }}/*.build
-            ${{ env.BUILD_DIR }}/*.upload
-            ${{ env.BUILD_DIR }}/lintian.log
+          path: ppa-artifacts/
+
