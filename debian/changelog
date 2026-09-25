@@ -1,4 +1,4 @@
-win12-desktop (0.3.0-2~ubuntu26.04.1) resolute; urgency=medium
+win12-desktop (0.3.0-3~ubuntu26.04.1) resolute; urgency=medium
 
   * Fix offline build
 
