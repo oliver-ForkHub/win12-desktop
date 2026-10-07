@@ -63,6 +63,12 @@
         <p>打包PPA</p>
       </description>
     </release>
+    <release version="0.3.1" date="2026-10-07">
+      <description>
+        <p>1.修复Windows终端的问题</p>
+        <p>2.修复语言包</p>
+      </description>
+    </release>
 </releases>
 
   <launchable type="desktop-id">
